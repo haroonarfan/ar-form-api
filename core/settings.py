@@ -57,3 +57,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('GMAIL_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD')
 RECIPIENT_EMAIL = os.environ.get('RECIPIENT_EMAIL')
+SHEETS_URL = os.environ.get('SHEETS_URL')

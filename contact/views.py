@@ -1,9 +1,27 @@
+import json
+import threading
 import os
 from django.conf import settings
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+import urllib.request
+
+
+def log_to_sheets(data):
+    """Non-blocking write to Google Sheets — runs in background thread."""
+    try:
+        payload = json.dumps(data).encode('utf-8')
+        req = urllib.request.Request(
+            settings.SHEETS_URL,
+            data=payload,
+            headers={'Content-Type': 'application/json'},
+            method='POST',
+        )
+        urllib.request.urlopen(req, timeout=10)
+    except Exception:
+        pass  # Never block the response if Sheets fails
 
 
 @csrf_exempt
@@ -17,9 +35,9 @@ def submit(request):
     service = request.POST.get('service', '').strip()
     message = request.POST.get('message', '').strip()
 
-    # ── Honeypot — bots fill this, humans don't ──────────────────
+    # ── Honeypot ─────────────────────────────────────────────────
     if request.POST.get('website', ''):
-        return JsonResponse({'status': 'ok'})  # silent discard
+        return JsonResponse({'status': 'ok'})
 
     # ── Validation ───────────────────────────────────────────────
     errors = {}
@@ -52,7 +70,7 @@ def submit(request):
         f"Reply directly to: {email}",
     ])
 
-    # ── Send ─────────────────────────────────────────────────────
+    # ── Send email ───────────────────────────────────────────────
     try:
         send_mail(
             subject=subject,
@@ -66,5 +84,18 @@ def submit(request):
             {'status': 'error', 'message': 'Failed to send email.'},
             status=500
         )
+
+    # ── Log to Sheets (non-blocking) ─────────────────────────────
+    sheet_data = {
+        'name':    name,
+        'email':   email,
+        'phone':   phone,
+        'company': company,
+        'service': service,
+        'message': message,
+    }
+    thread = threading.Thread(target=log_to_sheets, args=(sheet_data,))
+    thread.daemon = True
+    thread.start()
 
     return JsonResponse({'status': 'ok'})
