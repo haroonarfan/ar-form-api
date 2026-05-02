@@ -13,6 +13,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'api.arglobalservices.co.uk',
+    '18.170.119.123'
 ]
 
 INSTALLED_APPS = [
