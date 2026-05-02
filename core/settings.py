@@ -10,8 +10,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
     'api.arglobalservices.co.uk',
     '18.170.119.123'
 ]
@@ -45,8 +43,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ── CORS ────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     'https://arglobalservices.co.uk',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
 ]
 CORS_ALLOW_METHODS = ['POST', 'OPTIONS']
 
