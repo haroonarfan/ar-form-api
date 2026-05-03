@@ -43,6 +43,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ── CORS ────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     'https://arglobalservices.co.uk',
+    'https://www.arglobalservices.co.uk',
 ]
 CORS_ALLOW_METHODS = ['POST', 'OPTIONS']
 
