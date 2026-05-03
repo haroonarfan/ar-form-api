@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 import urllib.request
+import urllib.parse
 
 
 def log_to_sheets(data):
@@ -24,6 +25,25 @@ def log_to_sheets(data):
     except Exception:
         pass  # Never block the response if Sheets fails
 
+def verify_turnstile(token, remote_ip):
+    """Verify Cloudflare Turnstile token."""
+    try:
+        payload = urllib.parse.urlencode({
+            'secret': settings.TURNSTILE_SECRET_KEY,
+            'response': token,
+            'remoteip': remote_ip,
+        }).encode('utf-8')
+        req = urllib.request.Request(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            data=payload,
+            method='POST',
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            return result.get('success', False)
+    except Exception:
+        return False
+
 
 @csrf_exempt
 @require_POST
@@ -39,6 +59,14 @@ def submit(request):
     # ── Honeypot ─────────────────────────────────────────────────
     if request.POST.get('website', ''):
         return JsonResponse({'status': 'ok'})
+    
+    # ── Turnstile verification ───────────────────────────────────────
+    turnstile_token = request.POST.get('cf-turnstile-response', '')
+    if not verify_turnstile(turnstile_token, ip):
+        return JsonResponse(
+            {'status': 'error', 'message': 'Security check failed. Please try again.'},
+            status=403
+        )
     
     # ── Rate limiting ────────────────────────────────────────────────
     ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
