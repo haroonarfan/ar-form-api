@@ -56,6 +56,9 @@ def submit(request):
     service = request.POST.get('service', '').strip()
     message = request.POST.get('message', '').strip()
 
+    # ── Get client IP ────────────────────────────────────────────────
+    ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
+
     # ── Honeypot ─────────────────────────────────────────────────
     if request.POST.get('website', ''):
         return JsonResponse({'status': 'ok'})
@@ -69,7 +72,6 @@ def submit(request):
         )
     
     # ── Rate limiting ────────────────────────────────────────────────
-    ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
     cache_key = f'contact_form_{ip}'
     submission_count = cache.get(cache_key, 0)
 
