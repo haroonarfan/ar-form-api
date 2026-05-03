@@ -51,7 +51,8 @@ CORS_ALLOW_METHODS = ['POST', 'OPTIONS']
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/tmp/ar-form-cache',
     }
 }
 
