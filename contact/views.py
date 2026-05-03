@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.core.cache import cache
 import urllib.request
 
 
@@ -38,6 +39,19 @@ def submit(request):
     # ── Honeypot ─────────────────────────────────────────────────
     if request.POST.get('website', ''):
         return JsonResponse({'status': 'ok'})
+    
+    # ── Rate limiting ────────────────────────────────────────────────
+    ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
+    cache_key = f'contact_form_{ip}'
+    submission_count = cache.get(cache_key, 0)
+
+    if submission_count >= 5:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Too many submissions. Please try again later.'},
+            status=429
+        )
+
+    cache.set(cache_key, submission_count + 1, timeout=3600)  # 1 hour window
 
     # ── Validation ───────────────────────────────────────────────
     errors = {}

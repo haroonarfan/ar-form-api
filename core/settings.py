@@ -46,6 +46,14 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_METHODS = ['POST', 'OPTIONS']
 
+# ── CACHES - Rate limiting ───────────────────────────────────────
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 # ── EMAIL ────────────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
